@@ -6,6 +6,10 @@ import { loginSchema, registerSchema } from "../validators/authValidators.js";
 
 const router = Router();
 
+router.get("/ping", (req, res) => {
+  res.json({ message: "auth routes working" });
+});
+
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.get("/me", protect, me);

@@ -15,7 +15,13 @@ import invoiceRoutes from "./routes/invoiceRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import prisma from "./lib/prisma.js";
 
+const user = await prisma.user.findUnique({
+  where: { email: "admin@smartbill.ai" }
+});
+
+console.log(user);
 const app = express();
 app.set("trust proxy", 1);
 
