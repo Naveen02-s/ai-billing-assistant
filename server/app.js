@@ -17,6 +17,7 @@ import productRoutes from "./routes/productRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(compression());
