@@ -8,17 +8,27 @@ export const useAuthStore = create((set, get) => ({
   isAuthenticated: () => Boolean(get().token),
   login: async (credentials) => {
     set({ loading: true });
-    const { data } = await api.post("/auth/login", credentials);
-    localStorage.setItem("smartbill_token", data.token);
-    localStorage.setItem("smartbill_user", JSON.stringify(data.user));
-    set({ user: data.user, token: data.token, loading: false });
+    try {
+      const { data } = await api.post("/api/auth/login", credentials);
+      localStorage.setItem("smartbill_token", data.token);
+      localStorage.setItem("smartbill_user", JSON.stringify(data.user));
+      set({ user: data.user, token: data.token });
+      return data;
+    } finally {
+      set({ loading: false });
+    }
   },
   register: async (payload) => {
     set({ loading: true });
-    const { data } = await api.post("/auth/register", payload);
-    localStorage.setItem("smartbill_token", data.token);
-    localStorage.setItem("smartbill_user", JSON.stringify(data.user));
-    set({ user: data.user, token: data.token, loading: false });
+    try {
+      const { data } = await api.post("/api/auth/register", payload);
+      localStorage.setItem("smartbill_token", data.token);
+      localStorage.setItem("smartbill_user", JSON.stringify(data.user));
+      set({ user: data.user, token: data.token });
+      return data;
+    } finally {
+      set({ loading: false });
+    }
   },
   logout: () => {
     localStorage.removeItem("smartbill_token");

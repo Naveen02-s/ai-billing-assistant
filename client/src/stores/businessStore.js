@@ -12,10 +12,10 @@ export const useBusinessStore = create((set, get) => ({
   fetchCore: async () => {
     set({ loading: true });
     const [products, customers, invoices, payments] = await Promise.all([
-      api.get("/products"),
-      api.get("/customers"),
-      api.get("/invoices"),
-      api.get("/payments")
+      api.get("/api/products"),
+      api.get("/api/customers"),
+      api.get("/api/invoices"),
+      api.get("/api/payments")
     ]);
     set({
       products: products.data,
@@ -26,33 +26,33 @@ export const useBusinessStore = create((set, get) => ({
     });
   },
   fetchDashboard: async () => {
-    const { data } = await api.get("/dashboard");
+    const { data } = await api.get("/api/dashboard");
     set({ dashboard: data });
   },
   fetchAnalytics: async () => {
-    const { data } = await api.get("/analytics");
+    const { data } = await api.get("/api/analytics");
     set({ analytics: data });
   },
   saveProduct: async (payload, id) => {
-    const { data } = id ? await api.put(`/products/${id}`, payload) : await api.post("/products", payload);
+    const { data } = id ? await api.put(`/api/products/${id}`, payload) : await api.post("/api/products", payload);
     const products = id
       ? get().products.map((item) => (item.id === id ? data : item))
       : [data, ...get().products];
     set({ products });
   },
   deleteProduct: async (id) => {
-    await api.delete(`/products/${id}`);
+    await api.delete(`/api/products/${id}`);
     set({ products: get().products.filter((item) => item.id !== id) });
   },
   saveCustomer: async (payload, id) => {
-    const { data } = id ? await api.put(`/customers/${id}`, payload) : await api.post("/customers", payload);
+    const { data } = id ? await api.put(`/api/customers/${id}`, payload) : await api.post("/api/customers", payload);
     const customers = id
       ? get().customers.map((item) => (item.id === id ? data : item))
       : [data, ...get().customers];
     set({ customers });
   },
   createInvoice: async (payload) => {
-    const { data } = await api.post("/invoices", payload);
+    const { data } = await api.post("/api/invoices", payload);
     await get().fetchCore();
     return data;
   },

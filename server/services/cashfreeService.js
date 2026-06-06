@@ -21,6 +21,14 @@ const cashfreeClient = () => axios.create({
   }
 });
 
+const getCashfreeErrorMessage = (error) => (
+  error.response?.data?.message ||
+  error.response?.data?.error_description ||
+  error.response?.data?.error ||
+  error.message ||
+  "Cashfree request failed"
+);
+
 const ensureCredentials = () => {
   if (!process.env.CASHFREE_CLIENT_ID || !process.env.CASHFREE_CLIENT_SECRET) {
     throw new ApiError(500, "Cashfree credentials are not configured");
@@ -48,14 +56,19 @@ export const createCashfreeOrder = async ({ invoice, customer }) => {
     order_note: `Invoice ${invoice.invoiceNumber}`
   };
 
-  const { data } = await cashfreeClient().post("/orders", payload, {
-    headers: {
-      "x-request-id": nanoid(),
-      "x-idempotency-key": invoice.id
-    }
-  });
+  try {
+    const { data } = await cashfreeClient().post("/orders", payload, {
+      headers: {
+        "x-request-id": nanoid(),
+        "x-idempotency-key": invoice.id
+      }
+    });
 
-  return data;
+    return data;
+  } catch (error) {
+    console.error("Cashfree order creation failed:", error.response?.status, error.response?.data || error.message);
+    throw new ApiError(502, getCashfreeErrorMessage(error));
+  }
 };
 
 export const createUpiQrPayment = async ({ paymentSessionId, invoiceId }) => {
@@ -83,34 +96,30 @@ export const createUpiQrPayment = async ({ paymentSessionId, invoiceId }) => {
       }
     );
 
-    const qrPayload =
-  data?.data?.payload?.qrcode ||
-  data?.data?.url ||
-  null;
-
-
+    const qrPayload = data?.data?.payload?.qrcode || data?.data?.url || null;
 
     if (!qrPayload) {
       throw new ApiError(502, "Cashfree did not return a UPI QR payload");
     }
 
-   
+    const qrImageDataUrl = String(qrPayload).startsWith("data:image/")
+      ? qrPayload
+      : await QRCode.toDataURL(String(qrPayload), {
+        errorCorrectionLevel: "M",
+        margin: 1,
+        width: 512
+      });
 
     return {
-  ...data,
-  qrPayload,
-  qrImageDataUrl: qrPayload
-};
-
+      ...data,
+      qrPayload,
+      qrImageDataUrl
+    };
   } catch (error) {
-    console.log("========== CASHFREE QR ERROR ==========");
-    console.log("Status:", error.response?.status);
-    console.log(
-      JSON.stringify(error.response?.data, null, 2)
-    );
-    console.log("=======================================");
+    if (error instanceof ApiError) throw error;
 
-    throw error;
+    console.error("Cashfree QR creation failed:", error.response?.status, error.response?.data || error.message);
+    throw new ApiError(502, getCashfreeErrorMessage(error));
   }
 };
 

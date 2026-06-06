@@ -11,7 +11,7 @@ export default function Invoices() {
   useEffect(() => { fetchCore(); }, [fetchCore]);
 
   const downloadPdf = async (invoice) => {
-    const { data } = await api.get(`/invoices/${invoice.id}/pdf`, { responseType: "blob" });
+    const { data } = await api.get(`/api/invoices/${invoice.id}/pdf`, { responseType: "blob" });
     const url = URL.createObjectURL(data);
     const link = document.createElement("a");
     link.href = url;
