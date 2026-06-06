@@ -23,10 +23,15 @@ const user = await prisma.user.findUnique({
 
 console.log(user);
 const app = express();
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
 app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(compression());
+console.log("CLIENT_URL =", process.env.CLIENT_URL);
 app.use(cors({
   origin: process.env.CLIENT_URL || "http://localhost:5173",
   credentials: true

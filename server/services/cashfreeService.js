@@ -61,34 +61,57 @@ export const createCashfreeOrder = async ({ invoice, customer }) => {
 export const createUpiQrPayment = async ({ paymentSessionId, invoiceId }) => {
   ensureCredentials();
 
-  const expiry = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-  const { data } = await cashfreeClient().post("/orders/sessions", {
-    payment_session_id: paymentSessionId,
-    transaction_expiry_time: expiry,
-    payment_method: {
-      upi: { channel: "qrcode" }
-    }
-  }, {
-    headers: {
-      "x-request-id": nanoid(),
-      "x-idempotency-key": `upi-qr-${invoiceId}`
-    }
-  });
+  const expiry = new Date(Date.now() + 2 * 60 * 1000).toISOString();
 
-  const qrPayload = data?.data?.payload || data?.data?.url;
-  if (!qrPayload) {
-    throw new ApiError(502, "Cashfree did not return a UPI QR payload");
+  try {
+    const { data } = await cashfreeClient().post(
+      "/orders/sessions",
+      {
+        payment_session_id: paymentSessionId,
+        transaction_expiry_time: expiry,
+        payment_method: {
+          upi: {
+            channel: "qrcode"
+          }
+        }
+      },
+      {
+        headers: {
+          "x-request-id": nanoid(),
+          "x-idempotency-key": `upi-qr-${invoiceId}`
+        }
+      }
+    );
+
+    const qrPayload =
+  data?.data?.payload?.qrcode ||
+  data?.data?.url ||
+  null;
+
+
+
+    if (!qrPayload) {
+      throw new ApiError(502, "Cashfree did not return a UPI QR payload");
+    }
+
+   
+
+    return {
+  ...data,
+  qrPayload,
+  qrImageDataUrl: qrPayload
+};
+
+  } catch (error) {
+    console.log("========== CASHFREE QR ERROR ==========");
+    console.log("Status:", error.response?.status);
+    console.log(
+      JSON.stringify(error.response?.data, null, 2)
+    );
+    console.log("=======================================");
+
+    throw error;
   }
-
-  return {
-    ...data,
-    qrPayload,
-    qrImageDataUrl: await QRCode.toDataURL(qrPayload, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      scale: 8
-    })
-  };
 };
 
 export const verifyCashfreeWebhookSignature = ({ signature, timestamp, rawBody }) => {

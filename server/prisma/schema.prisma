@@ -118,7 +118,7 @@ model Payment {
   paymentSessionId  String?
   paymentMethod     String?
   paymentStatus     PaymentStatus @default(PENDING)
-  qrPayload         String?
+  qrPayload         Json?
   qrImageDataUrl    String?
   webhookPayload    Json?
   paidAt            DateTime?
