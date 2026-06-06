@@ -72,6 +72,30 @@ Demo login after seed:
 - Email: `admin@smartbill.ai`
 - Password: `Admin@12345`
 
+## GitHub Codespaces
+
+When running the frontend and backend on separate Codespaces forwarded ports, both ports must be public. If port `5000` is private, GitHub's port proxy returns `401 Unauthorized` to the browser's CORS preflight before Express can add `Access-Control-Allow-Origin`.
+
+In the Codespaces **Ports** tab:
+
+- Set frontend port `5173` visibility to **Public**
+- Set backend port `5000` visibility to **Public**
+
+Use the backend port URL as the frontend API URL:
+
+```bash
+VITE_API_URL=https://YOUR-CODESPACE-NAME-5000.app.github.dev
+VITE_SOCKET_URL=https://YOUR-CODESPACE-NAME-5000.app.github.dev
+```
+
+Set the backend client URL to the frontend port URL:
+
+```bash
+CLIENT_URL=https://YOUR-CODESPACE-NAME-5173.app.github.dev
+```
+
+Restart both dev servers after changing environment variables.
+
 ## Cashfree local webhook testing
 
 Cashfree must reach your local backend, so expose the server with a tunnel.
